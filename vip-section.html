@@ -1,0 +1,103 @@
+<!--
+Copyright (c) 2016 The Ayla Project Authors.
+This code may only be used under the MIT style license found at http://aylaweb.github.io/LICENSE.txt
+The complete set of authors may be found at http://aylaweb.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://aylaweb.github.io/CONTRIBUTORS.txt
+-->
+
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../iron-resizable-behavior/iron-resizable-behavior.html">
+<!-- <link rel="import" href="../iron-icon/iron-icon.html"> -->
+
+
+<dom-module id="vip-section">
+    <style>
+        :host {
+            display: flex;
+            flex: 1 1 0px;
+            border: solid;
+            min-width: 20px;
+            min-height: 20px;
+        }
+    </style>
+    <template>
+        <!--   <iron-icon on-click="_onclickHorizontalHandler" icon="add"></iron-icon> -->
+        <content></content> 
+    </template>
+    <script>
+        Polymer({
+            is: 'vip-section',
+            extends: 'section',
+            properties: {
+                sectionProps: {
+                    type: Object
+                },
+                container: {
+                    type: String,
+                    observer: '_containerChanged',
+                    notify: true
+                }
+            },
+            behaviors: [Ayla.VipInitBehavior],
+            listeners: {
+                'dragover': '_ondragoverHandler',
+                'drop': '_ondropHandler'
+            },
+            hostAttributes: {
+                draggable: {
+                    type: Boolean,
+                    value: true
+                }
+            },
+            _ondragoverHandler: function (e)
+            {
+                e.preventDefault();
+            },
+            _ondropHandler: function (e)
+            {
+                e.preventDefault();
+                e.stopPropagation();
+                var data = e.dataTransfer.getData("text");
+                document.getElementById(data).container = this._container + '|' + this.id;
+            },
+            _containerChanged: function (val, old) {
+                // Vip-layout section     
+                this.id = this.name;
+                var containerElem = Polymer.dom(document).querySelector('#' + this.appId);
+                if (val) {
+                    containerElem = Polymer.dom(document).querySelector('#' + val) ||
+                            document.querySelector(val);
+                }
+                if (containerElem) {
+                    Polymer.dom(containerElem).appendChild(this);
+                    Polymer.dom.flush();
+                    this.fire('attached-' + this.id, {id: this.id}, Polymer.dom(document));
+                }
+                else {
+                    Rx.Observable.fromEvent(document, 'attached-' + this.container)
+                            .subscribe(function (e)
+                            {
+                                this._containerChanged(val);
+                            }.bind(this));
+                }
+            },
+            ready: function () {
+                console.log(this.id + " -> vip-section -> Event attached");
+
+                //  if (this.sectionstyle)
+                //    Polymer.dom(document).querySelector('head').querySelector('style[scope="vip-layout"]').innerText = Polymer.dom(document).querySelector('head').querySelector('style[scope="vip-layout"]').innerText + " #" + this.id + JSON.stringify(this.style-props).replace(/\,/g, ";").replace(/\"([^(\")"]+)\"/g, "$1");
+            },
+            attached: function () {
+                console.log(this.id + " -> " + this.localName + " -> vip-elem -> Event attachedCallback");
+
+                //this.fire('elemattached' + this.id, {id: this.id}, Polymer.dom(document));
+            }
+            /*     _onclickHorizontalHandler: function(e)
+             {
+             console.log("sadsasd");
+             } */
+        }
+        );
+    </script>
+</dom-module>
